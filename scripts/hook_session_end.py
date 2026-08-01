@@ -14,10 +14,12 @@ import shutil
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from kbutil import default_kb as _default_kb
+
 MIN_BYTES = 8000        # transcripts smaller than this are not worth extracting
 MIN_USER_MSGS = 3       # fewer user messages than this -> skip
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_KB = os.path.join(os.path.expanduser("~"), ".interview-me")
 
 
 def find_claude_cmd():
@@ -65,7 +67,7 @@ def main():
     if user_msgs < MIN_USER_MSGS:
         return
 
-    kb = os.environ.get("INTERVIEW_ME_KB", DEFAULT_KB)
+    kb = _default_kb()
     os.makedirs(os.path.join(kb, "logs"), exist_ok=True)
 
     # assemble the extraction prompt (written to a file to avoid

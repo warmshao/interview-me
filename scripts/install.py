@@ -22,6 +22,9 @@ import shutil
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from kbutil import write_pointer, remove_pointer
+
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLAUDE_DIR = os.path.join(os.path.expanduser("~"), ".claude")
 SKILL_DST = os.path.join(CLAUDE_DIR, "skills", "interview-me")
@@ -89,6 +92,7 @@ def unregister_hook():
 
 def init_kb(kb: str):
     os.makedirs(kb, exist_ok=True)
+    write_pointer(kb)  # so hook/serve/build resolve the same KB everywhere
     gitignore = os.path.join(kb, ".gitignore")
     if not os.path.exists(gitignore):
         with open(gitignore, "w") as f:
@@ -186,6 +190,7 @@ def unregister_startup():
 def uninstall():
     unregister_startup()
     unregister_hook()
+    remove_pointer()
     if os.path.exists(SKILL_DST):
         shutil.rmtree(SKILL_DST)
         print(f"[uninstall] skill directory removed: {SKILL_DST}")

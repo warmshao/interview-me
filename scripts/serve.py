@@ -18,12 +18,13 @@ import signal
 import subprocess
 import sys
 
+from kbutil import default_kb as _default_kb
+
 DEFAULT_PORT = 11123
-DEFAULT_KB = os.path.join(os.path.expanduser("~"), ".interview-me")
 
 
 def kb_default() -> str:
-    return os.environ.get("INTERVIEW_ME_KB", DEFAULT_KB)
+    return _default_kb()
 
 
 def paths(kb: str) -> dict:

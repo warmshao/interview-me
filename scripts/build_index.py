@@ -19,7 +19,8 @@ import sys
 from html import unescape
 from html.parser import HTMLParser
 
-DEFAULT_KB = os.path.join(os.path.expanduser("~"), ".interview-me")
+from kbutil import default_kb as _default_kb
+
 SKIP_DIRS = {".git", "__pycache__", "logs", "node_modules"}
 RESERVED_DIRS = {"projects", "assets"}
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +28,7 @@ DEFAULT_PORT = 11123
 
 
 def kb_default() -> str:
-    return os.environ.get("INTERVIEW_ME_KB", DEFAULT_KB)
+    return _default_kb()
 
 
 def extract_html_meta(html_path: str):
@@ -185,6 +186,15 @@ def scan_pages(kb: str) -> dict:
     return pages
 
 
+def atomic_write(path: str, content: str):
+    """Write via temp file + rename so concurrent readers never see a
+    truncated file (two extraction sessions may run at once)."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(content)
+    os.replace(tmp, path)
+
+
 def build(kb: str) -> dict:
     kb = os.path.abspath(kb)
     os.makedirs(kb, exist_ok=True)
@@ -226,8 +236,8 @@ def build(kb: str) -> dict:
             "updated": updated,
         })
 
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump({"knowledge": knowledge}, f, ensure_ascii=False, indent=2)
+    atomic_write(json_path,
+                 json.dumps({"knowledge": knowledge}, ensure_ascii=False, indent=2))
 
     warnings = []
 
@@ -283,8 +293,7 @@ def build(kb: str) -> dict:
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     html = template.replace("__DATA__", payload)
     out = os.path.join(kb, "index.html")
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(html)
+    atomic_write(out, html)
 
     for w in warnings:
         print(f"[interview-me] WARNING: {w} has a Q&A section but no "
