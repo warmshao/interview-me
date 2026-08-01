@@ -77,7 +77,13 @@ Knowledge tied to the project in {{PROJECT_DIR}} — the material an interviewer
 
 **Layout & visuals**
 - Tables: ≤ 5 columns, terse cells. Long cell content → split into two tables or use lists.
-- SVG diagrams: always set `viewBox`, keep width ≤ 760px, and use `currentColor` / theme-neutral fills — a hardcoded black or white is invisible in one of the two themes.
+- SVG diagrams — quality bar (a bad diagram is worse than none):
+  - **Fill the canvas**: `viewBox` snug around the content (typically 700–760 wide, 250–400 tall). No large empty margins; center the composition. The most common defect is a tiny drawing lost in a huge canvas.
+  - **Palette**: accent `#6c8cff`, accent2 `#3ddbd9`, gold `#f2cc60` for highlights; `currentColor` / `#8b98a9` for secondary lines and text. Never hardcode pure black/white.
+  - **Boxes**: rounded corners (`rx` 8–12), consistent sizes, even spacing; flows read left→right or top→bottom.
+  - **Arrows**: define one `<marker>` and reuse it; label the arrows that carry meaning.
+  - **Text**: 13–16px, legible; every important element gets a label; add a small legend when there are >2 element types.
+  - **Strokes**: 1.5–2px, round linecaps; dashed for boundaries/trajectories.
 - No emoji as UI icons. No external images/fonts/scripts. Do NOT add or edit CSS — the template's `<style>` block is frozen.
 - Code snippets: ≤ ~100 chars per line.
 

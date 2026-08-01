@@ -121,6 +121,9 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:2rem}
 mjx-container{overflow-x:auto;overflow-y:hidden}
 mjx-container svg{max-width:100%}
 section{overflow-x:auto}
+/* responsive tables: JS wraps every table so wide ones scroll horizontally */
+.table-wrap{overflow-x:auto;margin:.8rem 0;border:1px solid var(--border);border-radius:10px}
+.table-wrap table{margin:0}
 /* sticky table of contents */
 .toc{position:fixed;right:1.2rem;top:5rem;width:210px;max-height:70vh;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.9rem;font-size:.82rem;z-index:5}
 .toc-title{font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem}
@@ -255,6 +258,15 @@ document.addEventListener("DOMContentLoaded", function(){
   // expand all collapsed answers when printing (CSS cannot open <details>)
   window.addEventListener("beforeprint", function(){
     document.querySelectorAll("details").forEach(function(d){ d.open = true; });
+  });
+
+  // responsive tables: wrap so wide tables scroll instead of overflowing
+  document.querySelectorAll(".container table").forEach(function(t){
+    if(t.parentElement.classList.contains("table-wrap")) return;
+    var w = document.createElement("div");
+    w.className = "table-wrap";
+    t.parentNode.insertBefore(w, t);
+    w.appendChild(t);
   });
 
   // markdown blocks: <script type="text/markdown" class="md">
