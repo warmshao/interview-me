@@ -81,6 +81,12 @@ def cmd_run(kb: str, port: int):
         def __init__(self, *a, **kw):
             super().__init__(*a, directory=kb, **kw)
 
+        def end_headers(self):
+            # local KB content changes on every extraction; never let the
+            # browser serve a stale page from heuristic caching
+            self.send_header("Cache-Control", "no-cache")
+            super().end_headers()
+
         def do_POST(self):
             """Local endpoints (bound to 127.0.0.1 only):
             /__delete__  {path}         -> delete a knowledge page, rebuild index
