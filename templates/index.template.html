@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<!-- InterviewMe home page template: build_index.py replaces the data placeholder with the knowledge tree JSON to produce the final index.html -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InterviewMe · Knowledge Base</title>
+<script>
+// apply saved theme before first paint to avoid a flash
+(function(){try{document.documentElement.dataset.theme=localStorage.getItem("imtheme")||"dark";}catch(e){}})();
+</script>
+<link rel="stylesheet" href="assets/vendor/highlight-theme.css">
+<script>
+window.MathJax = {
+  tex: {inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']]},
+  svg: {fontCache: 'global'},
+  options: {skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']}
+};
+</script>
+<script defer src="assets/vendor/tex-svg.js"></script>
+<script defer src="assets/vendor/highlight.min.js"></script>
+<style>
+:root{
+  --bg:#0b0f14; --panel:#11161d; --panel2:#161d27; --border:#232c3a;
+  --text:#e6edf3; --muted:#8b98a9; --accent:#6c8cff; --accent2:#3ddbd9;
+  --gold:#f2cc60; --red:#f47067; --green:#3fb950;
+  --heat0:#161d27; --heat1:#1d3a2f; --heat2:#256b47; --heat3:#3fb950;
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --panel:#ffffff; --panel2:#f0f3f7; --border:#d8dee6;
+  --text:#1f2328; --muted:#59636e; --accent:#4545c8; --accent2:#0a7c86;
+  --gold:#9a6700; --red:#d1242f; --green:#1a7f37;
+  --heat0:#e8ebef; --heat1:#aceebb; --heat2:#4ac26b; --heat3:#1a7f37;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;display:flex;flex-direction:column;transition:background .2s,color .2s}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit}
+.topbar{display:flex;align-items:center;gap:1rem;padding:1rem 1.6rem;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:10}
+.logo{font-size:1.15rem;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.search{flex:1;max-width:460px;display:flex;align-items:center;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:.45rem .9rem;gap:.5rem}
+.search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:.92rem}
+.search input::placeholder{color:var(--muted)}
+.quiz-btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;color:#fff;font-weight:600;font-size:.88rem;padding:.5rem 1.1rem;border-radius:10px;cursor:pointer;white-space:nowrap;transition:.15s}
+.quiz-btn:hover{filter:brightness(1.15)}
+.theme-toggle{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.theme-toggle:hover{color:var(--text);border-color:var(--accent)}
+.stats{color:var(--muted);font-size:.82rem;white-space:nowrap;margin-left:auto}
+.filetip{background:rgba(242,204,96,.12);border-bottom:1px solid var(--gold);color:var(--gold);font-size:.82rem;padding:.45rem 1.6rem;display:none}
+.layout{flex:1;display:flex;min-height:0}
+.sidebar{width:230px;flex:none;border-right:1px solid var(--border);padding:1.2rem .8rem;overflow-y:auto;background:var(--panel)}
+.side-title{font-size:.72rem;color:var(--muted);letter-spacing:.12em;margin:1rem .5rem .5rem;text-transform:uppercase}
+.side-title:first-of-type{margin-top:0}
+.cat-item{display:flex;justify-content:space-between;align-items:center;padding:.5rem .7rem;border-radius:8px;cursor:pointer;color:var(--muted);font-size:.92rem;margin-bottom:2px;transition:.15s}
+.cat-item:hover{background:var(--panel2);color:var(--text)}
+.cat-item.active{background:var(--panel2);color:var(--accent2);font-weight:600}
+.cat-item.proj.active{color:var(--gold)}
+.cat-item.due.active{color:var(--red)}
+.cat-count{font-size:.72rem;background:var(--panel2);border:1px solid var(--border);border-radius:999px;padding:.05rem .5rem}
+.cat-item.active .cat-count{border-color:currentColor}
+.cat-count.due-count{color:var(--red);border-color:var(--red)}
+.main{flex:1;padding:1.6rem;overflow-y:auto}
+/* learning dashboard */
+.dash{display:flex;gap:1.4rem;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1rem 1.3rem;margin-bottom:1.4rem;flex-wrap:wrap}
+.dash-stats{display:flex;gap:1.6rem;flex-wrap:wrap}
+.dstat{display:flex;flex-direction:column}
+.dstat .num{font-size:1.35rem;font-weight:700;line-height:1.2}
+.dstat .lbl{font-size:.72rem;color:var(--muted)}
+.dstat .num.fire{color:var(--gold)}
+.dstat .num.due{color:var(--red)}
+.heatmap{margin-left:auto;display:flex;gap:3px}
+.hcol{display:flex;flex-direction:column;gap:3px}
+.hcell{width:11px;height:11px;border-radius:2.5px;background:var(--heat0)}
+.hcell.l1{background:var(--heat1)} .hcell.l2{background:var(--heat2)} .hcell.l3{background:var(--heat3)}
+.heat-legend{font-size:.68rem;color:var(--muted);margin-left:.4rem;align-self:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.3rem;cursor:pointer;transition:.18s;display:flex;flex-direction:column;gap:.55rem;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--accent),var(--accent2));opacity:0;transition:.18s}
+.card.proj::before{background:linear-gradient(var(--gold),var(--accent))}
+.card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card.proj:hover{border-color:var(--gold)}
+.card:hover::before{opacity:1}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.card-cat{font-size:.72rem;color:var(--accent2);border:1px solid var(--accent2);border-radius:999px;padding:.08rem .6rem;white-space:nowrap}
+.card-cat.proj{color:var(--gold);border-color:var(--gold)}
+.card-date{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.card-title{font-size:1.05rem;font-weight:600;line-height:1.4}
+.card-summary{font-size:.85rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+.card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.2rem}
+.review-state{font-size:.75rem;display:flex;align-items:center;gap:.35rem;color:var(--muted)}
+.review-state .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.review-state.due{color:var(--red)}
+.review-state.due .dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+.review-state.new .dot{background:var(--accent)}
+.review-check{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-size:.72rem;padding:.15rem .55rem;cursor:pointer;opacity:0;transition:.15s}
+.card:hover .review-check{opacity:1}
+.review-check:hover{border-color:var(--green);color:var(--green)}
+.empty{color:var(--muted);text-align:center;margin-top:4rem;font-size:.95rem;grid-column:1/-1}
+.section-label{font-size:.85rem;color:var(--muted);margin-bottom:1rem}
+mark{background:rgba(242,204,96,.35);color:inherit;border-radius:3px;padding:0 1px}
+/* quiz modal */
+.quiz-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:1.5rem}
+.quiz-overlay.open{display:flex}
+.quiz-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;max-width:720px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.quiz-head{display:flex;justify-content:space-between;align-items:center;padding:1.1rem 1.4rem;border-bottom:1px solid var(--border)}
+.quiz-src{font-size:.8rem;color:var(--muted)}
+.quiz-src a{color:var(--accent)}
+.quiz-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1}
+.quiz-close:hover{color:var(--text)}
+.quiz-body{padding:1.4rem;overflow-y:auto;flex:1}
+.quiz-q{font-size:1.08rem;font-weight:600;line-height:1.6;margin-bottom:1rem}
+.quiz-a{border-top:1px dashed var(--border);padding-top:1rem;line-height:1.75;font-size:.93rem;display:none}
+.quiz-a.show{display:block}
+.quiz-a details.follow{margin:.6rem 0 0;border-left:2px solid var(--gold);background:rgba(242,204,96,.06);border-radius:0 8px 8px 0}
+.quiz-a details.follow>summary{cursor:pointer;padding:.5rem .9rem;color:var(--gold);font-size:.88rem;list-style:none}
+.quiz-a details.follow .answer{padding:0 .9rem .7rem;font-size:.93rem}
+.quiz-a table{width:100%;border-collapse:collapse;margin:.6rem 0;font-size:.88rem}
+.quiz-a th,.quiz-a td{border:1px solid var(--border);padding:.4rem .7rem;text-align:left}
+.quiz-a th{background:var(--panel2);color:var(--accent2)}
+.quiz-a code{background:var(--panel2);padding:.1rem .4rem;border-radius:6px;font-size:.9em;color:var(--accent2)}
+.quiz-a pre{background:var(--panel2);border:1px solid var(--border);padding:.8rem;border-radius:10px;overflow-x:auto;margin:.5rem 0}
+.quiz-foot{display:flex;gap:.7rem;padding:1.1rem 1.4rem;border-top:1px solid var(--border)}
+.quiz-foot button{flex:1;padding:.65rem;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:.92rem;cursor:pointer;transition:.15s}
+.quiz-foot button:hover{border-color:var(--accent)}
+.quiz-foot .btn-reveal{border-color:var(--accent);color:var(--accent)}
+.quiz-foot .btn-know{border-color:var(--green);color:var(--green)}
+.quiz-foot .btn-dunno{border-color:var(--red);color:var(--red)}
+.quiz-foot .btn-next{border-color:var(--accent2);color:var(--accent2)}
+.quiz-hint{font-size:.7rem;color:var(--muted);text-align:center;padding:.4rem 0 .7rem;border-top:1px solid var(--border)}
+.hidden{display:none!important}
+@media(max-width:760px){.sidebar{display:none}.stats{display:none}.heatmap{display:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">⌘ InterviewMe</div>
+  <div class="search">
+    <span style="color:var(--muted)">🔍</span>
+    <input id="q" type="text" placeholder="Search knowledge points / summaries…" autocomplete="off">
+  </div>
+  <button class="quiz-btn" id="quiz-open">🎯 Quiz me</button>
+  <button class="theme-toggle" id="theme-toggle">◐</button>
+  <div class="stats" id="stats"></div>
+</div>
+
+<div class="filetip" id="filetip"></div>
+
+<div class="layout">
+  <nav class="sidebar" id="cats"></nav>
+  <main class="main">
+    <div class="dash" id="dash">
+      <div class="dash-stats">
+        <div class="dstat"><span class="num fire" id="d-streak">0</span><span class="lbl">🔥 day streak</span></div>
+        <div class="dstat"><span class="num" id="d-today">0</span><span class="lbl">answered today</span></div>
+        <div class="dstat"><span class="num" id="d-total">0</span><span class="lbl">total answers</span></div>
+        <div class="dstat"><span class="num due" id="d-due">0</span><span class="lbl">due for review</span></div>
+      </div>
+      <div class="heatmap" id="heatmap"></div>
+      <span class="heat-legend">less → more</span>
+    </div>
+    <div class="section-label" id="label"></div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<!-- quiz modal -->
+<div class="quiz-overlay" id="quiz-overlay">
+  <div class="quiz-card">
+    <div class="quiz-head">
+      <div class="quiz-src" id="quiz-src"></div>
+      <button class="quiz-close" id="quiz-close">✕</button>
+    </div>
+    <div class="quiz-body">
+      <div class="quiz-q" id="quiz-q"></div>
+      <div class="quiz-a" id="quiz-a"></div>
+    </div>
+    <div class="quiz-foot">
+      <button class="btn-reveal" id="quiz-reveal">Show answer</button>
+      <button class="btn-know hidden" id="quiz-know">✓ Knew it</button>
+      <button class="btn-dunno hidden" id="quiz-dunno">✗ Didn't know</button>
+      <button class="btn-next" id="quiz-next">Next →</button>
+    </div>
+    <div class="quiz-hint">space: reveal · 1: knew · 2: didn't · →: next · esc: close</div>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+
+let activeKey = "__ALL__";   // "__ALL__" | "__DUE__" | "g:<category>" | "p:<project>"
+let keyword = "";
+
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* theme */
+$("#theme-toggle").onclick = () => {
+  const t = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  document.documentElement.dataset.theme = t;
+  try{ localStorage.setItem("imtheme", t); }catch(e){}
+};
+
+/* file:// tip: review progress lives in localStorage, which is per-origin,
+   so file:// and the local server keep SEPARATE records — nudge users to
+   pick the server URL for consistency */
+if(location.protocol === "file:"){
+  const tip = $("#filetip");
+  tip.style.display = "block";
+  tip.textContent = `💡 Tip: open http://127.0.0.1:${DATA.port || 11123} instead — review progress is stored per origin, so file:// and the server keep separate records.`;
+}
+
+/* ── spaced repetition state (localStorage, per page path) ── */
+const IVLS = [1, 3, 7, 14, 30, 60];   // days, advancing per successful recall
+const store = {
+  get(path){ try { return JSON.parse(localStorage.getItem("imrs:" + path)); } catch(e){ return null; } },
+  set(path, v){ try { localStorage.setItem("imrs:" + path, JSON.stringify(v)); } catch(e){} }
+};
+function todayStr(){ return new Date().toISOString().slice(0, 10); }
+
+function reviewState(path){
+  const r = store.get(path);
+  if(!r || !r.last) return {status: "new", label: "new"};
+  const due = new Date(r.last); due.setDate(due.getDate() + (r.ivl || 1));
+  const diff = Math.ceil((due - new Date(todayStr())) / 86400000);
+  return diff <= 0 ? {status: "due", label: "due"} : {status: "ok", label: diff + "d"};
+}
+
+function markReviewed(path, knew){
+  const r = store.get(path) || {step: -1};
+  const step = knew ? Math.min((r.step ?? -1) + 1, IVLS.length - 1) : 0;
+  store.set(path, {last: todayStr(), ivl: IVLS[step], step});
+}
+
+/* ── quiz activity stats (feeds the dashboard heatmap + streak) ── */
+const stats = {
+  load(){ try { return JSON.parse(localStorage.getItem("imstats")) || {}; } catch(e){ return {}; } },
+  save(s){ try { localStorage.setItem("imstats", JSON.stringify(s)); } catch(e){} },
+  bump(){
+    const s = stats.load();
+    s[todayStr()] = (s[todayStr()] || 0) + 1;
+    stats.save(s);
+  }
+};
+
+function renderDash(dueTotal){
+  const s = stats.load();
+  const today = todayStr();
+  $("#d-today").textContent = s[today] || 0;
+  $("#d-total").textContent = Object.values(s).reduce((a,b) => a + b, 0);
+  $("#d-due").textContent = dueTotal;
+  // streak: consecutive days with >=1 answer, ending today or yesterday
+  let streak = 0;
+  const d = new Date(today);
+  if(!s[today]) d.setDate(d.getDate() - 1);   // today not done yet, count from yesterday
+  while(s[d.toISOString().slice(0,10)]){ streak++; d.setDate(d.getDate() - 1); }
+  $("#d-streak").textContent = streak;
+  // heatmap: last 16 weeks (112 days), oldest first, one column per week
+  const cells = [];
+  const end = new Date(today);
+  const start = new Date(today); start.setDate(start.getDate() - 111);
+  // align start back to Sunday for a clean grid
+  start.setDate(start.getDate() - start.getDay());
+  let col = document.createElement("div"); col.className = "hcol";
+  for(let cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)){
+    const key = cur.toISOString().slice(0,10);
+    const n = s[key] || 0;
+    const lvl = n === 0 ? "" : n <= 2 ? "l1" : n <= 5 ? "l2" : "l3";
+    const cell = document.createElement("div");
+    cell.className = "hcell " + lvl;
+    cell.title = `${key}: ${n} answers`;
+    col.appendChild(cell);
+    if(cur.getDay() === 6){ $("#heatmap").appendChild(col); col = document.createElement("div"); col.className = "hcol"; }
+  }
+  $("#heatmap").appendChild(col);
+}
+
+function allPages(){
+  const general = DATA.categories.flatMap(c =>
+    c.pages.map(p => ({...p, group: c.name, type: "general"})));
+  const projects = DATA.projects.flatMap(c =>
+    c.pages.map(p => ({...p, group: c.name, type: "project"})));
+  return general.concat(projects);
+}
+
+function renderCats(){
+  const pages = allPages();
+  const dueCount = pages.filter(p => reviewState(p.path).status !== "ok").length;
+  let html = `<div class="side-title">Browse</div>
+    <div class="cat-item ${activeKey==="__ALL__"?"active":""}" data-key="__ALL__">
+      <span>All</span><span class="cat-count">${pages.length}</span></div>
+    <div class="cat-item due ${activeKey==="__DUE__"?"active":""}" data-key="__DUE__">
+      <span>📅 Due for review</span><span class="cat-count ${dueCount?"due-count":""}">${dueCount}</span></div>`;
+  if(DATA.categories.length){
+    html += `<div class="side-title">General</div>`;
+    for(const c of DATA.categories){
+      const key = "g:" + c.name;
+      html += `<div class="cat-item ${activeKey===key?"active":""}" data-key="${esc(key)}">
+        <span>${esc(c.name)}</span><span class="cat-count">${c.pages.length}</span></div>`;
+    }
+  }
+  if(DATA.projects.length){
+    html += `<div class="side-title">Projects</div>`;
+    for(const c of DATA.projects){
+      const key = "p:" + c.name;
+      html += `<div class="cat-item proj ${activeKey===key?"active":""}" data-key="${esc(key)}">
+        <span>${esc(c.name)}</span><span class="cat-count">${c.pages.length}</span></div>`;
+    }
+  }
+  $("#cats").innerHTML = html;
+  document.querySelectorAll(".cat-item").forEach(el =>
+    el.onclick = () => { activeKey = el.dataset.key; render(); });
+}
+
+function hi(text){
+  if(!keyword) return esc(text);
+  const k = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return esc(text).replace(new RegExp("(" + k + ")", "gi"), "<mark>$1</mark>");
+}
+
+function render(){
+  renderCats();
+  let pages = allPages();
+  let label = "All knowledge";
+  if(activeKey === "__DUE__"){
+    pages = pages.filter(p => reviewState(p.path).status !== "ok");
+    label = "Due for review";
+  }
+  if(activeKey.startsWith("g:")){ const g = activeKey.slice(2); pages = pages.filter(p => p.type==="general" && p.group===g); label = g; }
+  if(activeKey.startsWith("p:")){ const g = activeKey.slice(2); pages = pages.filter(p => p.type==="project" && p.group===g); label = "Project · " + g; }
+  if(keyword){
+    const k = keyword.toLowerCase();
+    pages = pages.filter(p => (p.title + " " + p.summary).toLowerCase().includes(k));
+  }
+  // due pages float to the top, then most recently updated
+  pages.sort((a,b) => {
+    const da = reviewState(a.path).status !== "ok" ? 0 : 1;
+    const db = reviewState(b.path).status !== "ok" ? 0 : 1;
+    return da - db || (b.updated || "").localeCompare(a.updated || "");
+  });
+  const gCount = DATA.categories.reduce((n,c) => n + c.pages.length, 0);
+  const pCount = DATA.projects.reduce((n,c) => n + c.pages.length, 0);
+  const dueTotal = allPages().filter(p => reviewState(p.path).status !== "ok").length;
+  $("#stats").textContent = `${gCount} general · ${pCount} project · ${dueTotal} due · updated ${DATA.generated}`;
+  $("#label").textContent = label + (keyword ? ` · search "${keyword}"` : "") + ` (${pages.length})`;
+  $("#grid").innerHTML = pages.length ? pages.map(p => {
+    const rs = reviewState(p.path);
+    return `
+    <div class="card ${p.type==="project"?"proj":""}" onclick="location.href='${p.path}'">
+      <div class="card-top">
+        <span class="card-cat ${p.type==="project"?"proj":""}">${esc(p.group)}</span>
+        <span class="card-date">${esc(p.updated || "")}</span>
+      </div>
+      <div class="card-title">${hi(p.title)}</div>
+      <div class="card-summary">${hi(p.summary || "")}</div>
+      <div class="card-foot">
+        <span class="review-state ${rs.status}"><span class="dot"></span>${rs.label}</span>
+        <button class="review-check" data-path="${esc(p.path)}" title="Mark as reviewed">✓ reviewed</button>
+      </div>
+    </div>`;
+  }).join("")
+    : `<div class="empty">No knowledge yet.<br>Chat with Claude about tech, then run /interview-me to distill it.</div>`;
+  document.querySelectorAll(".review-check").forEach(btn =>
+    btn.onclick = e => {
+      e.stopPropagation();
+      markReviewed(btn.dataset.path, true);
+      render();
+    });
+  $("#heatmap").innerHTML = "";
+  renderDash(dueTotal);
+}
+
+let timer;
+$("#q").addEventListener("input", e => {
+  clearTimeout(timer);
+  timer = setTimeout(() => { keyword = e.target.value.trim(); render(); }, 150);
+});
+
+/* ── quiz mode ── */
+const quizBank = allPages().flatMap(p =>
+  (p.qa || []).map(qa => ({page: p.path, title: p.title, group: p.group,
+                           due: reviewState(p.path).status !== "ok", ...qa})));
+let currentQuiz = null;
+
+function pickQuiz(){
+  // pages due for review get 3x weight
+  const pool = quizBank.flatMap(item => item.due ? [item, item, item] : [item]);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function showQuiz(){
+  if(!quizBank.length){
+    $("#quiz-q").textContent = "No interview Q&A found yet. Distill some knowledge first.";
+    $("#quiz-a").className = "quiz-a";
+    $("#quiz-a").innerHTML = "";
+    $("#quiz-src").textContent = "";
+    currentQuiz = null;
+  } else {
+    currentQuiz = pickQuiz();
+    $("#quiz-q").innerHTML = currentQuiz.q;
+    $("#quiz-a").innerHTML = currentQuiz.a;
+    $("#quiz-a").className = "quiz-a";
+    $("#quiz-src").innerHTML =
+      `from <a href="${currentQuiz.page}" target="_blank">${esc(currentQuiz.title)}</a> · ${esc(currentQuiz.group)}`;
+  }
+  $("#quiz-reveal").classList.remove("hidden");
+  $("#quiz-know").classList.add("hidden");
+  $("#quiz-dunno").classList.add("hidden");
+  $("#quiz-overlay").classList.add("open");
+}
+
+function revealQuiz(){
+  const a = $("#quiz-a");
+  a.classList.add("show");
+  // rich content injected at runtime needs explicit re-rendering
+  if(window.hljs) a.querySelectorAll("pre code").forEach(el => hljs.highlightElement(el));
+  if(window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([a]).catch(() => {});
+  $("#quiz-reveal").classList.add("hidden");
+  $("#quiz-know").classList.remove("hidden");
+  $("#quiz-dunno").classList.remove("hidden");
+}
+
+function gradeQuiz(knew){
+  if(currentQuiz){
+    markReviewed(currentQuiz.page, knew);
+    stats.bump();
+  }
+  render();          // refresh due counts / card dots / dashboard
+  showQuiz();        // straight to the next question
+}
+
+function quizOpen(){ return $("#quiz-overlay").classList.contains("open"); }
+
+$("#quiz-open").onclick = showQuiz;
+$("#quiz-next").onclick = showQuiz;
+$("#quiz-close").onclick = () => $("#quiz-overlay").classList.remove("open");
+$("#quiz-overlay").onclick = e => { if(e.target.id === "quiz-overlay") $("#quiz-overlay").classList.remove("open"); };
+$("#quiz-reveal").onclick = revealQuiz;
+$("#quiz-know").onclick = () => gradeQuiz(true);
+$("#quiz-dunno").onclick = () => gradeQuiz(false);
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape"){ $("#quiz-overlay").classList.remove("open"); return; }
+  if(!quizOpen()) return;
+  if(e.key === " " || e.key === "Enter"){
+    e.preventDefault();
+    if(!$("#quiz-reveal").classList.contains("hidden")) revealQuiz();
+  }
+  else if(e.key === "1" && !$("#quiz-know").classList.contains("hidden")) gradeQuiz(true);
+  else if(e.key === "2" && !$("#quiz-dunno").classList.contains("hidden")) gradeQuiz(false);
+  else if(e.key === "ArrowRight" || e.key === "n") showQuiz();
+});
+
+render();
+</script>
+</body>
+</html>

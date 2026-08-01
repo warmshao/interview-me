@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!--
+  InterviewMe sub-domain knowledge page template.
+  Usage: copy this file to <KB root>/<Category>/[subtopic/]<sub-domain>.html
+  (or <KB root>/projects/<project>/<topic>.html) and replace every {{PLACEHOLDER}}.
+
+  Placeholder path depth (count directories below KB root):
+  - <KB>/LLM/x.html            -> {{INDEX_PATH}} = ../index.html   {{ASSETS_PATH}} = ../assets/
+  - <KB>/LLM/sub/x.html        -> {{INDEX_PATH}} = ../../index.html {{ASSETS_PATH}} = ../../assets/
+  - <KB>/projects/foo/x.html   -> same as the second row
+
+  Rules:
+  - One HTML = one sub-domain (e.g. "KV Cache", "RLHF"); duplicate the concept
+    section for multiple concept cards in one page
+  - Fully self-contained: NO external images / CDN / web fonts. Diagrams are
+    inline SVG or pure CSS. Math/code/markdown use the LOCAL assets (already
+    linked below) — see "Rich content" in the extraction instructions
+  - Interview Q&A answers MUST live in collapsed <details class="qa"> blocks
+    (quiz mode depends on this exact class name)
+  - Delete the comparison table / figure blocks if there is nothing suitable;
+    "Related" chips must link to existing pages in the KB (relative paths)
+  - Write page content in the user's primary conversation language; static UI
+    labels (Back, Related, Interview Q&A, Comparison, Updated) should be
+    translated into that language as well when writing the page
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}} · InterviewMe</title>
+<script>
+// apply saved theme before first paint to avoid a flash
+(function(){try{document.documentElement.dataset.theme=localStorage.getItem("imtheme")||"dark";}catch(e){}})();
+</script>
+<link rel="stylesheet" href="{{ASSETS_PATH}}vendor/highlight-theme.css">
+<script>
+// MathJax must be configured BEFORE tex-svg.js loads
+window.MathJax = {
+  tex: {inlineMath: [['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']]},
+  svg: {fontCache: 'global'},
+  options: {skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']}
+};
+</script>
+<script defer src="{{ASSETS_PATH}}vendor/tex-svg.js"></script>
+<script defer src="{{ASSETS_PATH}}vendor/marked.min.js"></script>
+<script defer src="{{ASSETS_PATH}}vendor/highlight.min.js"></script>
+<style>
+:root{
+  --bg:#0b0f14; --panel:#11161d; --panel2:#161d27; --border:#232c3a;
+  --text:#e6edf3; --muted:#8b98a9; --accent:#6c8cff; --accent2:#3ddbd9;
+  --gold:#f2cc60; --green:#3fb950; --red:#f47067;
+  --shadow:rgba(0,0,0,.35);
+}
+[data-theme="light"]{
+  --bg:#f6f8fa; --panel:#ffffff; --panel2:#f0f3f7; --border:#d8dee6;
+  --text:#1f2328; --muted:#59636e; --accent:#4545c8; --accent2:#0a7c86;
+  --gold:#9a6700; --green:#1a7f37; --red:#d1242f;
+  --shadow:rgba(0,0,0,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75;padding:1.6rem 1rem 3rem;transition:background .2s,color .2s}
+a{color:var(--accent);text-decoration:none}
+.topline{max-width:880px;margin:0 auto 1.2rem;display:flex;justify-content:space-between;align-items:center}
+.back{color:var(--muted);font-size:.9rem}
+.back:hover{color:var(--accent)}
+.theme-toggle{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:.25rem .8rem;font-size:.8rem;cursor:pointer}
+.theme-toggle:hover{color:var(--text);border-color:var(--accent)}
+.container{max-width:880px;margin:0 auto}
+header.hero{background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:16px;padding:1.8rem 2rem;margin-bottom:1.5rem}
+.badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
+.badge{font-size:.75rem;padding:.15rem .7rem;border-radius:999px;border:1px solid var(--border);background:var(--panel2);color:var(--muted)}
+.badge.cat{color:var(--accent2);border-color:var(--accent2)}
+h1{font-size:1.7rem;line-height:1.3}
+.overview{margin-top:1rem;padding:.9rem 1.1rem;border-left:3px solid var(--accent);background:var(--panel2);border-radius:0 10px 10px 0;font-size:1.02rem}
+section{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:1.6rem 2rem;margin-bottom:1.5rem}
+h2{font-size:1.15rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;scroll-margin-top:1.5rem}
+h2::before{content:"";width:4px;height:1.1em;background:linear-gradient(var(--accent),var(--accent2));border-radius:2px;flex:none}
+h3{font-size:1rem;margin:1rem 0 .4rem;color:var(--accent2);scroll-margin-top:1.5rem}
+section p{margin:.5rem 0}
+section ul,section ol{margin:.5rem 0 .5rem 1.4rem}
+section li{margin:.25rem 0}
+code{background:var(--panel2);padding:.1rem .4rem;border-radius:6px;font-size:.9em;color:var(--accent2);font-family:Consolas,"Cascadia Code",monospace}
+pre{background:var(--panel2);border:1px solid var(--border);padding:1rem;border-radius:10px;overflow-x:auto;margin:.6rem 0}
+pre code{background:none;padding:0;display:block;font-size:.88rem;line-height:1.6}
+table{width:100%;border-collapse:collapse;margin:.8rem 0;font-size:.92rem}
+th,td{border:1px solid var(--border);padding:.55rem .8rem;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--accent2);white-space:nowrap}
+tr:nth-child(even) td{background:rgba(128,128,128,.05)}
+.figure{background:var(--panel2);border:1px dashed var(--border);border-radius:12px;padding:1.2rem;margin:.6rem 0;text-align:center;overflow-x:auto}
+.figure svg{max-width:100%;height:auto}
+.figure .caption{color:var(--muted);font-size:.82rem;margin-top:.5rem}
+.definition{padding:.7rem 1rem;border-left:3px solid var(--accent2);background:var(--panel2);border-radius:0 8px 8px 0;margin:.5rem 0 .8rem}
+.chips{display:flex;flex-wrap:wrap;gap:.6rem}
+.chip{padding:.4rem .9rem;border-radius:999px;background:var(--panel2);border:1px solid var(--border);font-size:.85rem;transition:.15s}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+details.qa{background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:.8rem;overflow:hidden}
+details.qa>summary{cursor:pointer;padding:.9rem 1.2rem;font-weight:600;list-style:none;display:flex;gap:.6rem;align-items:baseline}
+details.qa>summary::-webkit-details-marker{display:none}
+details.qa>summary::before{content:"Q";flex:none;width:1.5rem;height:1.5rem;border-radius:8px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem}
+details.qa>summary:hover{color:var(--accent)}
+details.qa .answer{padding:.2rem 1.2rem 1.1rem 3.2rem}
+details.follow{margin:.6rem 0 0;border-left:2px solid var(--gold);background:rgba(242,204,96,.06);border-radius:0 8px 8px 0}
+details.follow>summary{cursor:pointer;padding:.5rem .9rem;color:var(--gold);font-size:.88rem;list-style:none}
+details.follow>summary::-webkit-details-marker{display:none}
+details.follow>summary::before{content:"▸ "}
+details.follow .answer{padding:0 .9rem .7rem;font-size:.93rem}
+.difficulty{float:right;font-size:.72rem;color:var(--muted);font-weight:400}
+footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:2rem}
+mjx-container{overflow-x:auto;overflow-y:hidden}
+/* sticky table of contents */
+.toc{position:fixed;right:1.2rem;top:5rem;width:210px;max-height:70vh;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.9rem;font-size:.82rem;z-index:5}
+.toc-title{font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem}
+.toc a{display:block;color:var(--muted);padding:.22rem .4rem;border-radius:6px;border-left:2px solid transparent;line-height:1.4}
+.toc a:hover{background:var(--panel2);color:var(--text)}
+.toc a.active{color:var(--accent2);border-left-color:var(--accent2)}
+@media(max-width:1280px){.toc{display:none}}
+@media(max-width:600px){section,header.hero{padding:1.2rem}}
+</style>
+</head>
+<body>
+
+<div class="topline">
+  <a class="back" href="{{INDEX_PATH}}">← Back to Knowledge Base</a>
+  <button class="theme-toggle" onclick="toggleTheme()">◐ theme</button>
+</div>
+
+<nav class="toc" id="toc"></nav>
+
+<div class="container">
+
+<header class="hero">
+  <div class="badges">
+    <span class="badge cat">{{CATEGORY}}</span>
+    <!-- keep the next line only if there is a subtopic, otherwise delete it -->
+    <span class="badge">{{SUBCATEGORY}}</span>
+    <span class="badge">Updated {{DATE}}</span>
+  </div>
+  <h1>{{TITLE}}</h1>
+  <p class="overview">{{SUBDOMAIN_OVERVIEW}}</p>
+</header>
+
+<!-- ═══════════════ Concept card: one knowledge point per block; duplicate this section ═══════════════ -->
+<section class="concept">
+  <h2>{{CONCEPT_NAME}}</h2>
+  <p class="definition">{{CONCEPT_ONE_SENTENCE_DEFINITION}}</p>
+
+  <!-- Core content: structured, layered; use p/ul/ol/h3/pre freely.
+       Math: inline \( ... \) and display $$ ... $$.
+       Code: <pre><code class="language-python">...</code></pre>
+       Long markdown: <script type="text/markdown" class="md">...</script> -->
+  {{CONCEPT_CORE_CONTENT}}
+
+  <!-- Comparison table against the most confusable counterpart; delete block if none -->
+  <h3>Comparison: {{CONCEPT_NAME}} vs {{CONFUSABLE_CONCEPT}}</h3>
+  <table>
+    <tr><th>Dimension</th><th>{{CONCEPT_NAME}}</th><th>{{CONFUSABLE_CONCEPT}}</th></tr>
+    <tr><td>{{DIMENSION}}</td><td>{{A_CELL}}</td><td>{{B_CELL}}</td></tr>
+  </table>
+
+  <!-- Figure: inline SVG or pure CSS boxes (structure/flow); delete block if none -->
+  <div class="figure">
+    {{INLINE_SVG_OR_CSS_DIAGRAM}}
+    <div class="caption">{{FIGURE_CAPTION}}</div>
+  </div>
+</section>
+
+<!-- ═══════════════ Related knowledge: link existing KB pages with relative paths ═══════════════ -->
+<section>
+  <h2>Related</h2>
+  <div class="chips">
+    <a class="chip" href="{{RELATIVE_PATH_TO_OTHER_PAGE}}">{{RELATED_TITLE}}</a>
+  </div>
+</section>
+
+<!-- ═══════════════ Interview Q&A: 3-8 questions easy->hard, answers collapsed, each with follow-ups.
+      The class names "qa"/"follow" are load-bearing: the quiz bank extractor depends on them ═══════════════ -->
+<section>
+  <h2>Interview Q&amp;A</h2>
+
+  <details class="qa">
+    <summary>{{QUESTION}}<span class="difficulty">{{★难度}}</span></summary>
+    <div class="answer">
+      {{ANSWER_HTML}}
+      <details class="follow">
+        <summary>{{FOLLOW_UP_QUESTION}}</summary>
+        <div class="answer">{{FOLLOW_UP_ANSWER_HTML}}</div>
+      </details>
+    </div>
+  </details>
+
+</section>
+
+<footer>InterviewMe · Updated {{DATE}}</footer>
+
+</div>
+
+<script>
+function toggleTheme(){
+  var t = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  document.documentElement.dataset.theme = t;
+  try{ localStorage.setItem("imtheme", t); }catch(e){}
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  // markdown blocks: <script type="text/markdown" class="md">
+  if(window.marked){
+    document.querySelectorAll('script.md[type="text/markdown"]').forEach(function(s){
+      var text = s.textContent.replace(/^\n+/, "");
+      var indent = (text.match(/^[ \t]+/) || [""])[0];
+      if(indent) text = text.split("\n").map(function(l){ return l.startsWith(indent) ? l.slice(indent.length) : l; }).join("\n");
+      var div = document.createElement("div");
+      div.className = "md-rendered";
+      div.innerHTML = marked.parse(text);
+      s.parentNode.replaceChild(div, s);
+    });
+  }
+  // code highlighting (after markdown, so md-produced code blocks are covered)
+  if(window.hljs){ hljs.highlightAll(); }
+
+  // build sticky TOC from section headings
+  var heads = document.querySelectorAll(".container section h2");
+  if(heads.length >= 3){
+    var toc = document.getElementById("toc");
+    var html = '<div class="toc-title">On this page</div>';
+    heads.forEach(function(h, i){
+      if(!h.id) h.id = "sec-" + i;
+      html += '<a href="#' + h.id + '" data-target="' + h.id + '">' + h.textContent + '</a>';
+    });
+    toc.innerHTML = html;
+    var links = toc.querySelectorAll("a");
+    var onScroll = function(){
+      var current = 0;
+      heads.forEach(function(h, i){ if(h.getBoundingClientRect().top < 120) current = i; });
+      links.forEach(function(l, i){ l.classList.toggle("active", i === current); });
+    };
+    document.addEventListener("scroll", onScroll, {passive: true});
+    onScroll();
+  }
+});
+</script>
+
+</body>
+</html>
