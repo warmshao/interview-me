@@ -66,8 +66,9 @@ a{color:var(--accent);text-decoration:none}
 .topline{max-width:880px;margin:0 auto 1.2rem;display:flex;justify-content:space-between;align-items:center}
 .back{color:var(--muted);font-size:.9rem}
 .back:hover{color:var(--accent)}
-.theme-toggle{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:.25rem .8rem;font-size:.8rem;cursor:pointer}
+.theme-toggle{display:inline-flex;align-items:center;gap:.35rem;background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:.3rem .75rem;font-size:.8rem;cursor:pointer}
 .theme-toggle:hover{color:var(--text);border-color:var(--accent)}
+.theme-toggle svg{width:14px;height:14px}
 .container{max-width:880px;margin:0 auto}
 header.hero{background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:16px;padding:1.8rem 2rem;margin-bottom:1.5rem}
 .badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
@@ -111,6 +112,8 @@ details.follow .answer{padding:0 .9rem .7rem;font-size:.93rem}
 .difficulty{float:right;font-size:.72rem;color:var(--muted);font-weight:400}
 footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:2rem}
 mjx-container{overflow-x:auto;overflow-y:hidden}
+mjx-container svg{max-width:100%}
+section{overflow-x:auto}
 /* sticky table of contents */
 .toc{position:fixed;right:1.2rem;top:5rem;width:210px;max-height:70vh;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.9rem;font-size:.82rem;z-index:5}
 .toc-title{font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem}
@@ -141,7 +144,7 @@ mjx-container{overflow-x:auto;overflow-y:hidden}
 
 <div class="topline">
   <a class="back" href="{{INDEX_PATH}}">← Back to Knowledge Base</a>
-  <button class="theme-toggle" onclick="toggleTheme()">◐ theme</button>
+  <button class="theme-toggle" onclick="toggleTheme()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>theme</button>
 </div>
 
 <nav class="toc" id="toc"></nav>

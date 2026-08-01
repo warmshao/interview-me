@@ -43,8 +43,9 @@ button{font-family:inherit}
 .search input::placeholder{color:var(--muted)}
 .quiz-btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;color:#fff;font-weight:600;font-size:.88rem;padding:.5rem 1.1rem;border-radius:10px;cursor:pointer;white-space:nowrap;transition:.15s}
 .quiz-btn:hover{filter:brightness(1.15)}
-.theme-toggle{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;white-space:nowrap}
-.theme-toggle:hover{color:var(--text);border-color:var(--accent)}
+.icon-btn{display:inline-flex;align-items:center;gap:.4rem;background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:.45rem .85rem;font-size:.82rem;cursor:pointer;white-space:nowrap;transition:.15s}
+.icon-btn:hover{color:var(--text);border-color:var(--accent)}
+.icon-btn svg{width:15px;height:15px;flex:none}
 .stats{color:var(--muted);font-size:.82rem;white-space:nowrap;margin-left:auto}
 .filetip{background:rgba(242,204,96,.12);border-bottom:1px solid var(--gold);color:var(--gold);font-size:.82rem;padding:.45rem 1.6rem;display:none}
 .layout{flex:1;display:flex;min-height:0}
@@ -164,8 +165,14 @@ mark{background:rgba(242,204,96,.35);color:inherit;border-radius:3px;padding:0 1
     <input id="q" type="text" placeholder="Search knowledge points / summaries…" autocomplete="off">
   </div>
   <button class="quiz-btn" id="quiz-open">🎯 Quiz me</button>
-  <button class="theme-toggle" id="filter-open" title="Blocked topics filter">🏷</button>
-  <button class="theme-toggle" id="theme-toggle">◐</button>
+  <button class="icon-btn" id="filter-open" title="Blocked topics filter">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><circle cx="7" cy="7" r="1.2" fill="currentColor" stroke="none"/></svg>
+    Filters
+  </button>
+  <button class="icon-btn" id="theme-toggle" title="Toggle light / dark">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>
+    Theme
+  </button>
   <div class="stats" id="stats"></div>
 </div>
 
