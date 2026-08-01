@@ -26,6 +26,7 @@ What the installer does:
 ```bash
 python scripts/install.py --kb D:\knowledge-base   # custom knowledge base directory
 python scripts/install.py --port 12345             # custom port
+python scripts/install.py --startup                # auto-start server at logon/boot
 python scripts/install.py --no-hook                # skip hook registration (manual mode only)
 python scripts/install.py --no-server              # skip server startup
 python scripts/install.py --uninstall              # uninstall (knowledge base is kept)

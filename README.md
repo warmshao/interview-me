@@ -70,10 +70,13 @@ Pages support LaTeX math (`\( ... \)`, `$$ ... $$`), syntax-highlighted code sni
 
 ```bash
 python scripts/install.py                 # install
+python scripts/install.py --startup       # install + auto-start server at logon
 python scripts/install.py --uninstall     # uninstall (knowledge base is kept)
 python scripts/serve.py start|stop|status # manage the local server
 python scripts/build_index.py             # rebuild the home page manually
 ```
+
+The server starts once at install time. To have it come back after every reboot, pass `--startup` (Windows: Task Scheduler logon task · macOS: LaunchAgent · Linux: systemd user unit). Claude Code and Codex share the same server instance — there is no conflict, `start` is idempotent.
 
 ## Codex users
 

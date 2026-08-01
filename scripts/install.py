@@ -110,7 +110,81 @@ def start_server(kb: str, port: int):
     print(f"[4/4] open http://127.0.0.1:{port} in your browser")
 
 
+STARTUP_NAME = "InterviewMe"
+
+
+def register_startup(kb: str, port: int):
+    """Start the local server automatically at logon/boot. Uses the INSTALLED
+    copy of serve.py (under ~/.claude/skills) so it survives repo deletion."""
+    serve = os.path.join(SKILL_DST, "scripts", "serve.py")
+    if os.name == "nt":
+        cmd = f'"{sys.executable}" "{serve}" start --kb "{kb}" --port {port}'
+        subprocess.run(["schtasks", "/create", "/f", "/tn", STARTUP_NAME,
+                        "/sc", "onlogon", "/tr", cmd], check=True,
+                       capture_output=True)
+        print("[startup] registered a logon task (Task Scheduler: InterviewMe)")
+    elif sys.platform == "darwin":
+        agents = os.path.expanduser("~/Library/LaunchAgents")
+        os.makedirs(agents, exist_ok=True)
+        plist = os.path.join(agents, "com.interviewme.serve.plist")
+        with open(plist, "w") as f:
+            f.write(f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.interviewme.serve</string>
+  <key>ProgramArguments</key><array>
+    <string>{sys.executable}</string><string>{serve}</string>
+    <string>start</string><string>--kb</string><string>{kb}</string>
+    <string>--port</string><string>{port}</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+</dict></plist>""")
+        subprocess.run(["launchctl", "load", plist], capture_output=True)
+        print(f"[startup] registered a LaunchAgent: {plist}")
+    else:
+        unit_dir = os.path.expanduser("~/.config/systemd/user")
+        os.makedirs(unit_dir, exist_ok=True)
+        unit = os.path.join(unit_dir, "interview-me.service")
+        with open(unit, "w") as f:
+            f.write(f"""[Unit]
+Description=InterviewMe knowledge base server
+
+[Service]
+ExecStart={sys.executable} {serve} start --kb {kb} --port {port}
+
+[Install]
+WantedBy=default.target
+""")
+        subprocess.run(["systemctl", "--user", "daemon-reload"], capture_output=True)
+        subprocess.run(["systemctl", "--user", "enable", "interview-me.service"],
+                       capture_output=True)
+        print("[startup] registered a systemd user unit; to survive logout run: "
+              "loginctl enable-linger $USER")
+
+
+def unregister_startup():
+    if os.name == "nt":
+        subprocess.run(["schtasks", "/delete", "/f", "/tn", STARTUP_NAME],
+                       capture_output=True)
+        print("[uninstall] logon task removed")
+    elif sys.platform == "darwin":
+        plist = os.path.expanduser(
+            "~/Library/LaunchAgents/com.interviewme.serve.plist")
+        if os.path.exists(plist):
+            subprocess.run(["launchctl", "unload", plist], capture_output=True)
+            os.remove(plist)
+            print("[uninstall] LaunchAgent removed")
+    else:
+        unit = os.path.expanduser("~/.config/systemd/user/interview-me.service")
+        if os.path.exists(unit):
+            subprocess.run(["systemctl", "--user", "disable",
+                            "interview-me.service"], capture_output=True)
+            os.remove(unit)
+            print("[uninstall] systemd user unit removed")
+
+
 def uninstall():
+    unregister_startup()
     unregister_hook()
     if os.path.exists(SKILL_DST):
         shutil.rmtree(SKILL_DST)
@@ -126,6 +200,8 @@ def main():
     ap.add_argument("--port", type=int, default=11123, help="local server port")
     ap.add_argument("--no-server", action="store_true",
                     help="do not start the local server")
+    ap.add_argument("--startup", action="store_true",
+                    help="auto-start the local server at logon/boot")
     ap.add_argument("--no-hook", action="store_true",
                     help="do not register the SessionEnd hook")
     ap.add_argument("--uninstall", action="store_true", help="uninstall")
@@ -148,6 +224,8 @@ def main():
               f"python {os.path.join(SKILL_DST, 'scripts', 'serve.py')} start")
     else:
         start_server(kb, args.port)
+    if args.startup:
+        register_startup(kb, args.port)
 
     print("\nDone! How to use:")
     print("  automatic: knowledge is extracted when a Claude Code session ends")
