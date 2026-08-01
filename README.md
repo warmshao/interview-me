@@ -23,7 +23,7 @@ The installer will:
 1. Install the skill to `~/.claude/skills/interview-me/`
 2. Idempotently register a SessionEnd hook in `~/.claude/settings.json` (backing up the original)
 3. Initialize the knowledge base (default `~/.interview-me`, override with `--kb`)
-4. Start a local server at **http://127.0.0.1:11123** (override with `--port`, `--startup` for boot auto-start)
+4. Start a local server at http://127.0.0.1:11123 (override with `--port`, `--startup` for boot auto-start)
 
 ## Two ways to fill your knowledge base
 

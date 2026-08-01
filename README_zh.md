@@ -23,7 +23,7 @@ Follow install.md if anything fails.
 1. 把 skill 安装到 `~/.claude/skills/interview-me/`
 2. 向 `~/.claude/settings.json` 幂等注册 SessionEnd hook（自动备份原配置）
 3. 初始化知识库（默认 `~/.interview-me`，可用 `--kb` 自定义）
-4. 启动本地服务 **http://127.0.0.1:11123**（`--port` 改端口，`--startup` 开机自启）
+4. 启动本地服务 http://127.0.0.1:11123 （`--port` 改端口，`--startup` 开机自启）
 
 ## 两种知识来源
 
