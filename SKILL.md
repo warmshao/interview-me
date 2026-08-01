@@ -1,13 +1,15 @@
 ---
 name: interview-me
-description: Distills reusable technical knowledge from the current conversation into a structured local interview-prep website (study cards + interviewer-style Q&A, general vs project knowledge). Use when the user types /interview-me or asks to distill, archive, or extract knowledge points from this conversation, or to update the interview knowledge base. Accepts optional focus instructions, e.g. "/interview-me only the RL parts".
+description: Distills reusable technical knowledge from the current conversation into a structured local interview-prep website (study cards + interviewer-style Q&A, general vs project knowledge). Also works in JD mode — paste a job description or interview questions after /interview-me to auto-research answers and build a targeted prep roadmap. Use when the user types /interview-me or asks to distill, archive, or extract knowledge from this conversation, update the interview knowledge base, or prepare for a role based on a JD.
 ---
 
-# InterviewMe — Manual Extraction
+# InterviewMe
 
-The user has triggered knowledge extraction. The current conversation context is the input source.
+The user triggered knowledge distillation. Pick the mode by looking at what followed `/interview-me`.
 
-## Steps
+## Mode A — Conversation distillation (default)
+
+Use when no JD / interview questions were pasted. The current conversation is the input source.
 
 1. Resolve paths:
    - `KB_DIR`: env var `INTERVIEW_ME_KB`, default `~/.interview-me`
@@ -18,7 +20,18 @@ The user has triggered knowledge extraction. The current conversation context is
    - `{{KB_DIR}}`, `{{SKILL_DIR}}`, `{{PROJECT_DIR}}` → the paths above
    - `{{USER_REQUIREMENTS}}` → whatever the user typed after `/interview-me`; if nothing, use "None (decide the focus yourself)"
 3. Follow extract.md exactly: search index.json before writing → create/rewrite/merge sub-domain pages → update index.json → run build_index.py.
-4. Report to the user: which pages were created/updated, with clickable `http://127.0.0.1:<port>/<path>` links (port from `KB_DIR/config.json`, default 11123). If the local server is not running, mention `python SKILL_DIR/scripts/serve.py start`, or that `KB_DIR/index.html` can be opened directly in a browser.
+
+## Mode B — JD / interview-prep
+
+Use when the user pasted a job description, interview questions, or 面经 after `/interview-me`.
+
+1. Resolve the same paths as Mode A.
+2. Read `SKILL_DIR/prompts/jd-prep.md` and substitute its placeholders (`{{JD_CONTENT}}` = the pasted text).
+3. Follow it exactly: decompose the JD into topics → gap-analysis against the KB → research with WebSearch/WebFetch where uncertain → write/merge knowledge pages → write the prep-roadmap page → rebuild.
+
+## After either mode
+
+Report to the user: which pages were created/updated, with clickable `http://127.0.0.1:<port>/<path>` links (port from `KB_DIR/config.json`, default 11123). If the local server is not running, mention `python SKILL_DIR/scripts/serve.py start`, or that `KB_DIR/index.html` can be opened directly in a browser.
 
 ## Notes
 
