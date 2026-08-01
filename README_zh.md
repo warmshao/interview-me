@@ -2,6 +2,8 @@
 
 > 把你和 LLM 的对话、以及你的 JD，蒸馏成个人面试复习知识库。
 
+*愿你的知识复利，跑赢面试焦虑——早日拿下心仪的 offer。🍀*
+
 [English](README.md) | [中文](README_zh.md)
 
 用 LLM vibecoding、分析论文、排查问题时，对话里全是知识——但会话一结束就蒸发了。**InterviewMe** 自动（或手动）把这些知识捕获、脱敏、整理成一个本地网站。每个页面都按面试官的思维方式组织：上半部分是学习卡片（一句话定义 / 核心概念 / 对比表格 / 图示 / 关联知识），下半部分是高频面试 Q&A（答案默认折叠可自测，带层层追问）。
@@ -85,7 +87,7 @@ python scripts/serve.py start|stop|status # 管理本地服务
 python scripts/build_index.py             # 手动重建首页
 ```
 
-**升级**：skill 就是本地文件，Claude Code / Codex **不会**自动从 GitHub 拉新版本。更新方式：`git pull && python scripts/install.py`，然后开新会话。知识库、复习记录、屏蔽配置都不受影响。变更内容见 [CHANGELOG.md](CHANGELOG.md)。
+**升级**：skill 就是本地文件，Claude Code / Codex **不会**自动从 GitHub 拉新版本。最省事的方式：直接跟 Claude Code 说一句 **"更新 interview-me skill"**，它会自己 `git pull` + 重装。或者手动：`git pull && python scripts/install.py`，然后开新会话。知识库、复习记录、屏蔽配置都不受影响。变更内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 Claude Code 和 Codex 共享同一个服务实例，不会冲突（`start` 幂等）。Codex 没有 SessionEnd hook，只有手动模式——见 [install.md](install.md)。
 

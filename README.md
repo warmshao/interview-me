@@ -2,6 +2,8 @@
 
 > Distill your LLM conversations — and your job descriptions — into a personal interview-prep knowledge base.
 
+*May your knowledge compound faster than your interview anxiety — go land that dream offer. 🍀*
+
 [English](README.md) | [中文](README_zh.md)
 
 When you vibecode, analyze papers, or debug with an LLM, the conversation is full of valuable knowledge — and it evaporates the moment the session ends. **InterviewMe** captures it automatically (or on demand), anonymizes it, and organizes it into a browsable local website where every page is built the way an interviewer thinks: study cards up top (definition / core concepts / comparison tables / diagrams / related links), high-frequency Q&A below (answers collapsed for self-testing, with follow-up probes).
@@ -85,7 +87,7 @@ python scripts/serve.py start|stop|status # manage the local server
 python scripts/build_index.py             # rebuild the home page manually
 ```
 
-**Upgrading**: skills are plain local files — Claude Code / Codex never auto-pull from GitHub. To update: `git pull && python scripts/install.py`, then start a new session. Your knowledge base, review records, and filters are never touched. See [CHANGELOG.md](CHANGELOG.md) for what changed.
+**Upgrading**: skills are plain local files — Claude Code / Codex never auto-pull from GitHub. The easiest way: just tell Claude Code **"update my interview-me skill"** and it will `git pull` + reinstall for you. Or run it yourself: `git pull && python scripts/install.py`, then start a new session. Your knowledge base, review records, and filters are never touched. See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
 Claude Code and Codex share the same server instance — no conflict, `start` is idempotent. Codex has no SessionEnd hook, so extraction there is manual-only — see [install.md](install.md).
 
