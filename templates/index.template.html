@@ -128,6 +128,29 @@ mark{background:rgba(242,204,96,.35);color:inherit;border-radius:3px;padding:0 1
 .quiz-foot .btn-next{border-color:var(--accent2);color:var(--accent2)}
 .quiz-hint{font-size:.7rem;color:var(--muted);text-align:center;padding:.4rem 0 .7rem;border-top:1px solid var(--border)}
 .hidden{display:none!important}
+/* card delete + confirm modal + toast */
+.card-del{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-size:.72rem;padding:.15rem .55rem;cursor:pointer;opacity:0;transition:.15s;margin-left:.4rem}
+.card:hover .card-del{opacity:1}
+.card-del:hover{border-color:var(--red);color:var(--red)}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:110;display:none;align-items:center;justify-content:center;padding:1.5rem}
+.confirm-overlay.open{display:flex}
+.confirm-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:1.4rem 1.6rem;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.confirm-btns{display:flex;gap:.7rem;margin-top:1.2rem}
+.confirm-btns button{flex:1;padding:.55rem;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:.9rem;cursor:pointer;transition:.15s}
+.confirm-btns button:hover{border-color:var(--accent)}
+.confirm-btns .danger{border-color:var(--red);color:var(--red)}
+.confirm-btns .danger:hover{background:var(--red);color:#fff}
+/* filter chips editor */
+.filter-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}
+.fchip{display:inline-flex;align-items:center;gap:.35rem;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:.25rem .75rem;font-size:.82rem}
+.fchip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;line-height:1;padding:0}
+.fchip button:hover{color:var(--red)}
+.filter-input-row{display:flex;gap:.6rem}
+.filter-input-row input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:.5rem .8rem;color:var(--text);font-size:.9rem;outline:none}
+.filter-input-row input:focus{border-color:var(--accent)}
+.filter-input-row button{padding:.5rem 1rem;border-radius:10px;border:1px solid var(--accent);background:none;color:var(--accent);cursor:pointer}
+.filter-hint{font-size:.78rem;color:var(--muted);line-height:1.5}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:.6rem 1.2rem;font-size:.85rem;z-index:120;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 @media(max-width:760px){.sidebar{display:none}.stats{display:none}.heatmap{display:none}}
 </style>
 </head>
@@ -140,6 +163,7 @@ mark{background:rgba(242,204,96,.35);color:inherit;border-radius:3px;padding:0 1
     <input id="q" type="text" placeholder="Search knowledge points / summaries…" autocomplete="off">
   </div>
   <button class="quiz-btn" id="quiz-open">🎯 Quiz me</button>
+  <button class="theme-toggle" id="filter-open" title="Blocked topics filter">🏷</button>
   <button class="theme-toggle" id="theme-toggle">◐</button>
   <div class="stats" id="stats"></div>
 </div>
@@ -163,6 +187,39 @@ mark{background:rgba(242,204,96,.35);color:inherit;border-radius:3px;padding:0 1
     <div class="grid" id="grid"></div>
   </main>
 </div>
+
+<!-- blocked-topics filter modal -->
+<div class="confirm-overlay" id="filter-overlay">
+  <div class="confirm-card">
+    <b>🏷 Blocked topics</b>
+    <div class="filter-chips" id="filter-chips"></div>
+    <div class="filter-input-row">
+      <input id="filter-input" type="text" placeholder="e.g. frontend, crypto, java…" autocomplete="off">
+      <button id="filter-add">Add</button>
+    </div>
+    <p class="filter-hint" style="margin-top:.7rem">
+      Topics listed here are injected into the extraction prompt: future
+      conversations will NOT record knowledge in these domains. Existing
+      pages are untouched. Takes effect on the next extraction.
+    </p>
+    <div class="confirm-btns">
+      <button id="filter-cancel">Cancel</button>
+      <button class="danger" id="filter-save" style="border-color:var(--green);color:var(--green)">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- delete confirm modal -->
+<div class="confirm-overlay" id="del-overlay">
+  <div class="confirm-card">
+    <div id="del-text"></div>
+    <div class="confirm-btns">
+      <button id="del-cancel">Cancel</button>
+      <button class="danger" id="del-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
 
 <!-- quiz modal -->
 <div class="quiz-overlay" id="quiz-overlay">
@@ -355,7 +412,10 @@ function render(){
       <div class="card-summary">${hi(p.summary || "")}</div>
       <div class="card-foot">
         <span class="review-state ${rs.status}"><span class="dot"></span>${rs.label}</span>
-        <button class="review-check" data-path="${esc(p.path)}" title="Mark as reviewed">✓ reviewed</button>
+        <span>
+          <button class="review-check" data-path="${esc(p.path)}" title="Mark as reviewed">✓ reviewed</button>
+          <button class="card-del" data-path="${esc(p.path)}" data-title="${esc(p.title)}" title="Delete this page">✕</button>
+        </span>
       </div>
     </div>`;
   }).join("")
@@ -365,6 +425,11 @@ function render(){
       e.stopPropagation();
       markReviewed(btn.dataset.path, true);
       render();
+    });
+  document.querySelectorAll(".card-del").forEach(btn =>
+    btn.onclick = e => {
+      e.stopPropagation();
+      askDelete(btn.dataset.path, btn.dataset.title);
     });
   $("#heatmap").innerHTML = "";
   renderDash(dueTotal);
@@ -377,7 +442,7 @@ $("#q").addEventListener("input", e => {
 });
 
 /* ── quiz mode ── */
-const quizBank = allPages().flatMap(p =>
+let quizBank = allPages().flatMap(p =>
   (p.qa || []).map(qa => ({page: p.path, title: p.title, group: p.group,
                            due: reviewState(p.path).status !== "ok", ...qa})));
 let currentQuiz = null;
@@ -449,6 +514,104 @@ document.addEventListener("keydown", e => {
   else if(e.key === "2" && !$("#quiz-dunno").classList.contains("hidden")) gradeQuiz(false);
   else if(e.key === "ArrowRight" || e.key === "n") showQuiz();
 });
+
+/* ── card delete (requires the local server; file:// is read-only) ── */
+let pendingDelete = null;
+
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.style.display = "none", 4000);
+}
+
+function askDelete(path, title){
+  pendingDelete = path;
+  $("#del-text").innerHTML =
+    `Delete <b>${esc(title)}</b>?<br>` +
+    `<span style="color:var(--muted);font-size:.82rem">The HTML file will be removed permanently. This cannot be undone.</span>`;
+  $("#del-overlay").classList.add("open");
+}
+
+$("#del-cancel").onclick = () => $("#del-overlay").classList.remove("open");
+$("#del-overlay").onclick = e => { if(e.target.id === "del-overlay") $("#del-overlay").classList.remove("open"); };
+$("#del-confirm").onclick = async () => {
+  const path = pendingDelete;
+  $("#del-overlay").classList.remove("open");
+  if(!path) return;
+  try{
+    const r = await fetch("/__delete__", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({path})
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || "delete failed");
+    // drop the page from the in-memory tree and clean up its state
+    for(const c of DATA.categories.concat(DATA.projects))
+      c.pages = c.pages.filter(p => p.path !== path);
+    DATA.categories = DATA.categories.filter(c => c.pages.length);
+    DATA.projects = DATA.projects.filter(c => c.pages.length);
+    try{ localStorage.removeItem("imrs:" + path); }catch(e){}
+    quizBank = quizBank.filter(q => q.page !== path);
+    render();
+    toast("Deleted.");
+  }catch(e){
+    toast(location.protocol === "file:"
+      ? `Delete needs the local server: open http://127.0.0.1:${DATA.port || 11123}`
+      : "Delete failed: " + e.message);
+  }
+};
+
+/* ── blocked-topics filter (injected into the extraction prompt) ── */
+let filterTopics = [];
+
+function renderFilterChips(){
+  $("#filter-chips").innerHTML = filterTopics.length
+    ? filterTopics.map((t,i) =>
+        `<span class="fchip">${esc(t)}<button data-i="${i}" title="remove">✕</button></span>`).join("")
+    : `<span style="color:var(--muted);font-size:.82rem">No blocked topics — everything worth keeping gets recorded.</span>`;
+  document.querySelectorAll(".fchip button").forEach(b =>
+    b.onclick = () => { filterTopics.splice(+b.dataset.i, 1); renderFilterChips(); });
+}
+
+$("#filter-open").onclick = () => {
+  filterTopics = (DATA.blocked_topics || []).slice();
+  renderFilterChips();
+  $("#filter-overlay").classList.add("open");
+  $("#filter-input").focus();
+};
+$("#filter-cancel").onclick = () => $("#filter-overlay").classList.remove("open");
+$("#filter-overlay").onclick = e => { if(e.target.id === "filter-overlay") $("#filter-overlay").classList.remove("open"); };
+
+function addFilterTopic(){
+  const v = $("#filter-input").value.trim();
+  if(v && !filterTopics.includes(v)) filterTopics.push(v);
+  $("#filter-input").value = "";
+  renderFilterChips();
+}
+$("#filter-add").onclick = addFilterTopic;
+$("#filter-input").addEventListener("keydown", e => { if(e.key === "Enter") addFilterTopic(); });
+
+$("#filter-save").onclick = async () => {
+  $("#filter-overlay").classList.remove("open");
+  try{
+    const r = await fetch("/__config__", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({blocked_topics: filterTopics})
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || "save failed");
+    DATA.blocked_topics = filterTopics.slice();
+    toast(filterTopics.length
+      ? `Blocked topics saved: ${filterTopics.join(", ")} — applies to future extractions.`
+      : "Blocked topics cleared.");
+  }catch(e){
+    toast(location.protocol === "file:"
+      ? `Saving filters needs the local server: open http://127.0.0.1:${DATA.port || 11123}`
+      : "Save failed: " + e.message);
+  }
+};
 
 render();
 </script>

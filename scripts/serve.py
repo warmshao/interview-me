@@ -74,9 +74,66 @@ def read_pid(kb: str):
 
 
 def cmd_run(kb: str, port: int):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    kb_root = os.path.realpath(kb)
+
     class Handler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *a, **kw):
             super().__init__(*a, directory=kb, **kw)
+
+        def do_POST(self):
+            """Local endpoints (bound to 127.0.0.1 only):
+            /__delete__  {path}         -> delete a knowledge page, rebuild index
+            /__config__  {blocked_topics} -> merge into config.json (topic filters)
+            """
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length) or b"{}")
+            except Exception:
+                body = {}
+
+            if self.path == "/__config__":
+                try:
+                    topics = body.get("blocked_topics", [])
+                    if not isinstance(topics, list):
+                        raise ValueError("blocked_topics must be a list")
+                    topics = [str(t).strip() for t in topics if str(t).strip()]
+                    cfg = load_config(kb_root)
+                    cfg["blocked_topics"] = topics
+                    save_config(kb_root, cfg)
+                    payload, status = b'{"ok": true}', 200
+                except Exception as e:
+                    payload = json.dumps({"ok": False, "error": str(e)}).encode()
+                    status = 400
+            elif self.path == "/__delete__":
+                try:
+                    rel = str(body.get("path", "")).replace("\\", "/").lstrip("/")
+                    target = os.path.realpath(os.path.join(kb_root, rel))
+                    ok = (rel.endswith(".html")
+                          and rel != "index.html"
+                          and not rel.startswith("assets/")
+                          and ".." not in rel.split("/")
+                          and os.path.commonpath([target, kb_root]) == kb_root
+                          and os.path.isfile(target))
+                    if not ok:
+                        raise ValueError("invalid path")
+                    os.remove(target)
+                    subprocess.run([sys.executable,
+                                    os.path.join(script_dir, "build_index.py"),
+                                    "--kb", kb_root],
+                                   capture_output=True, timeout=120)
+                    payload, status = b'{"ok": true}', 200
+                except Exception as e:
+                    payload = json.dumps({"ok": False, "error": str(e)}).encode()
+                    status = 400
+            else:
+                self.send_error(404)
+                return
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
 
     http.server.ThreadingHTTPServer.allow_reuse_address = True
     server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)

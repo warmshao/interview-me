@@ -16,6 +16,7 @@ import os
 import re
 import shutil
 import sys
+from html import unescape
 from html.parser import HTMLParser
 
 DEFAULT_KB = os.path.join(os.path.expanduser("~"), ".interview-me")
@@ -214,11 +215,13 @@ def build(kb: str) -> dict:
         updated = old.get("updated") or datetime.date.fromtimestamp(
             os.path.getmtime(info["abs"])).isoformat()
         knowledge.append({
-            "title": title,
+            # unescape defensively: some extractors write "&amp;" into
+            # index.json, which would otherwise double-escape in the UI
+            "title": unescape(title),
             "path": rel,
             "type": info["type"],
             "group": info["group"],
-            "summary": summary,
+            "summary": unescape(summary),
             "related": old.get("related", []),
             "updated": updated,
         })
@@ -254,17 +257,21 @@ def build(kb: str) -> dict:
         return [{"name": n, "pages": p} for n, p in sorted(groups.items())]
 
     port = DEFAULT_PORT
+    blocked = []
     cfg_path = os.path.join(kb, "config.json")
     if os.path.exists(cfg_path):
         try:
             with open(cfg_path, "r", encoding="utf-8") as f:
-                port = json.load(f).get("port", DEFAULT_PORT)
+                cfg = json.load(f)
+                port = cfg.get("port", DEFAULT_PORT)
+                blocked = cfg.get("blocked_topics", [])
         except (json.JSONDecodeError, OSError):
             pass
 
     data = {
         "generated": today,
         "port": port,
+        "blocked_topics": blocked,
         "categories": group_of("general"),
         "projects": group_of("project"),
     }

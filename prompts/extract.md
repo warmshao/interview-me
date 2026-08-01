@@ -41,25 +41,26 @@ Knowledge tied to the project in {{PROJECT_DIR}} — the material an interviewer
 
 ## 3. Workflow
 
-1. **Read** the whole conversation. List candidate knowledge points, including valuable adjacent concepts that were only touched on briefly.
-2. **SEARCH BEFORE WRITE (iron rule).** Read `{{KB_DIR}}/index.json` and the existing directory tree. For each candidate:
+1. **Read `{{KB_DIR}}/config.json` first.** If it contains `blocked_topics` (a list of domains/topics the user does NOT want recorded), silently skip any candidate knowledge that belongs to those domains. Never create pages, categories or projects for blocked topics. (Existing pages are left alone — blocking only stops new recordings.)
+2. **Read** the whole conversation. List candidate knowledge points, including valuable adjacent concepts that were only touched on briefly.
+3. **SEARCH BEFORE WRITE (iron rule).** Read `{{KB_DIR}}/index.json` and the existing directory tree. For each candidate:
    - Already covered, nothing new → **skip**
    - Covered, but this conversation adds angles/corrections/depth → **rewrite and merge** into the existing page (preserve its valuable content; refresh `updated`/`summary` in index.json)
    - Close in theme to an existing page → **merge** as a new concept card inside that page
    - Brand new and substantial → **create** a new page
    - Too trivial or too narrow → **drop**
-3. **Control page count.** One HTML page = one coherent sub-domain (e.g. `kv-cache.html`, `rlhf.html`), NOT one isolated question. Merging beats creating. If a page grows beyond ~6 concept cards, consider splitting it into two sub-domain pages.
-4. **Think like an interviewer.** For every point, ask: What would the interviewer follow up on? What are its parent/child/sibling concepts? What is it most commonly confused with? Cross-link existing pages both ways in the "Related" section. Create important missing neighbors ONLY if you are confident the content is accurate.
-5. **Write pages.** Copy `{{SKILL_DIR}}/templates/knowledge.html` to the target path, replace every `{{PLACEHOLDER}}`, and follow the guide comments inside:
+4. **Control page count.** One HTML page = one coherent sub-domain (e.g. `kv-cache.html`, `rlhf.html`), NOT one isolated question. Merging beats creating. If a page grows beyond ~6 concept cards, consider splitting it into two sub-domain pages.
+5. **Think like an interviewer.** For every point, ask: What would the interviewer follow up on? What are its parent/child/sibling concepts? What is it most commonly confused with? Cross-link existing pages both ways in the "Related" section. Create important missing neighbors ONLY if you are confident the content is accurate.
+6. **Write pages.** Copy `{{SKILL_DIR}}/templates/knowledge.html` to the target path, replace every `{{PLACEHOLDER}}`, and follow the guide comments inside:
    - **Language**: write page CONTENT in the same language the user primarily uses in conversation (e.g. Chinese for a Chinese-speaking user). File names stay lowercase-English-hyphenated.
    - **Path placeholders**: compute `{{INDEX_PATH}}` / `{{ASSETS_PATH}}` from the page's depth below the KB root (one `../` per directory level, e.g. `LLM/x.html` → `../index.html` and `../assets/`; `projects/foo/x.html` → `../../index.html` and `../../assets/`).
    - **Overview**: one paragraph — what this sub-domain is and why it matters (interview opening-answer quality).
    - **Concept cards**: one-sentence definition must be memorizable; core content structured in layers; comparison table targets the single most confusable counterpart; diagrams are inline SVG or pure CSS (NO external images/CDN/fonts).
    - **Rich content (use it when it helps)**: formulas as LaTeX — inline `\( ... \)`, display `$$ ... $$`; core code snippets as `<pre><code class="language-python">...</code></pre>` (always tag the language; keep snippets focused — the 20 lines that matter, not whole files); long markdown passages inside `<script type="text/markdown" class="md">...</script>`. Math and code are rendered by LOCAL vendored assets — never link external CDNs.
    - **Interview Q&A**: 3–8 questions, easy → hard; answers inside collapsed `<details class="qa">` (the class names `qa`/`follow` are load-bearing — quiz mode parses them); every question carries at least one "follow-up" layer; important ones nest two layers; tag difficulty stars.
-6. **Update `{{KB_DIR}}/index.json`.** Each entry: `{title, path (relative to KB root, forward slashes), type ("general"|"project"), group (category or project name), summary (one sentence), related (array of titles), updated (YYYY-MM-DD)}`. Update entries for rewritten pages too.
-7. **Rebuild the home page**: run `python "{{SKILL_DIR}}/scripts/build_index.py" --kb "{{KB_DIR}}"`.
-8. **Report.** List what was created / rewritten / merged / skipped, and print a clickable URL for every touched page: `http://127.0.0.1:<port>/<path>` (port from `{{KB_DIR}}/config.json`, default 11123; `<path>` is the `path` field from index.json).
+7. **Update `{{KB_DIR}}/index.json`.** Each entry: `{title, path (relative to KB root, forward slashes), type ("general"|"project"), group (category or project name), summary (one sentence), related (array of titles), updated (YYYY-MM-DD)}`. Update entries for rewritten pages too. `title`/`summary` must be PLAIN TEXT — write `Hooks & Skills`, never `&amp;` or other HTML entities.
+8. **Rebuild the home page**: run `python "{{SKILL_DIR}}/scripts/build_index.py" --kb "{{KB_DIR}}"`.
+9. **Report.** List what was created / rewritten / merged / skipped, and print a clickable URL for every touched page: `http://127.0.0.1:<port>/<path>` (port from `{{KB_DIR}}/config.json`, default 11123; `<path>` is the `path` field from index.json).
 
 ## 4. Hard rules
 
