@@ -15,6 +15,12 @@
   - Fully self-contained: NO external images / CDN / web fonts. Diagrams are
     inline SVG or pure CSS. Math/code/markdown use the LOCAL assets (already
     linked below) — see "Rich content" in the extraction instructions
+  - Math: write LaTeX verbatim \( ... \) / $$ ... $$ — never double backslashes;
+    no math inside <code>/<pre>; avoid raw < > in formulas (use \lt \gt)
+  - SVG: set viewBox, width ≤ 760px, use currentColor/theme-neutral fills
+    (hardcoded black/white is invisible in one theme)
+  - Tables: ≤ 5 columns, terse cells. Code: ≤ ~100 chars per line. Do NOT
+    add or edit CSS — the <style> block is frozen
   - Interview Q&A answers MUST live in collapsed <details class="qa"> blocks
     (quiz mode depends on this exact class name)
   - Delete the comparison table / figure blocks if there is nothing suitable;
@@ -25,6 +31,7 @@
   - {{PAGE_PATH}} = this file's path relative to the KB root, forward slashes,
     e.g. "LLM/rope.html" — it keys the in-page review button to the same
     spaced-repetition store as the home page
+  - Before finishing: re-read the file, no {{PLACEHOLDER}} may remain
 -->
 <html lang="en">
 <head>

@@ -51,7 +51,7 @@ Knowledge tied to the project in {{PROJECT_DIR}} — the material an interviewer
    - Too trivial or too narrow → **drop**
 4. **Control page count.** One HTML page = one coherent sub-domain (e.g. `kv-cache.html`, `rlhf.html`), NOT one isolated question. Merging beats creating. If a page grows beyond ~6 concept cards, consider splitting it into two sub-domain pages.
 5. **Think like an interviewer.** For every point, ask: What would the interviewer follow up on? What are its parent/child/sibling concepts? What is it most commonly confused with? Cross-link existing pages both ways in the "Related" section. Create important missing neighbors ONLY if you are confident the content is accurate.
-6. **Write pages.** Copy `{{SKILL_DIR}}/templates/knowledge.html` to the target path, replace every `{{PLACEHOLDER}}`, and follow the guide comments inside:
+6. **Write pages.** Copy `{{SKILL_DIR}}/templates/knowledge.html` to the target path, replace every `{{PLACEHOLDER}}`, follow the guide comments inside, and obey the HTML authoring rules in section 4:
    - **Language**: write page CONTENT in the same language the user primarily uses in conversation (e.g. Chinese for a Chinese-speaking user). File names stay lowercase-English-hyphenated.
    - **Path placeholders**: compute `{{INDEX_PATH}}` / `{{ASSETS_PATH}}` from the page's depth below the KB root (one `../` per directory level, e.g. `LLM/x.html` → `../index.html` and `../assets/`; `projects/foo/x.html` → `../../index.html` and `../../assets/`). Set `{{PAGE_PATH}}` to the page's own KB-root-relative path (e.g. `LLM/x.html`) — it keys the in-page review button.
    - **Overview**: one paragraph — what this sub-domain is and why it matters (interview opening-answer quality).
@@ -62,7 +62,30 @@ Knowledge tied to the project in {{PROJECT_DIR}} — the material an interviewer
 8. **Rebuild the home page**: run `python "{{SKILL_DIR}}/scripts/build_index.py" --kb "{{KB_DIR}}"`.
 9. **Report.** List what was created / rewritten / merged / skipped, and print a clickable URL for every touched page: `http://127.0.0.1:<port>/<path>` (port from `{{KB_DIR}}/config.json`, default 11123; `<path>` is the `path` field from index.json).
 
-## 4. Hard rules
+## 4. HTML authoring rules (learned from real rendering defects)
+
+**Math (MathJax)**
+- Write LaTeX verbatim: `\( x \)` and `$$ ... $$`. NEVER double the backslashes — `\\(` renders as literal text.
+- Never put math inside `<code>` or `<pre>` — those tags are excluded from rendering.
+- Avoid raw `<` / `>` inside formulas; use `\lt` / `\gt` or space them out, so the HTML parser doesn't mistake them for tags.
+- Stick to standard AMS / MathJax-core commands (`\boldsymbol`, `\mathrm`, `\langle`, …). No `\usepackage`, no custom macros.
+- Display math (`$$ ... $$`) goes on its own paragraph line, never mid-sentence.
+
+**HTML & entities**
+- Escape `<`, `>`, `&` inside code blocks (`&lt;` etc.). Outside code blocks write plain text — no HTML entities in titles/summaries.
+- Remove optional blocks COMPLETELY (guide comments included) when unused. After writing a page, re-read it: no `{{PLACEHOLDER}}` may remain, tags must balance.
+
+**Layout & visuals**
+- Tables: ≤ 5 columns, terse cells. Long cell content → split into two tables or use lists.
+- SVG diagrams: always set `viewBox`, keep width ≤ 760px, and use `currentColor` / theme-neutral fills — a hardcoded black or white is invisible in one of the two themes.
+- No emoji as UI icons. No external images/fonts/scripts. Do NOT add or edit CSS — the template's `<style>` block is frozen.
+- Code snippets: ≤ ~100 chars per line.
+
+**Structure contract (load-bearing)**
+- Q&A must use `<details class="qa">` and `<details class="follow">` exactly — the quiz extractor depends on these class names.
+- Keep the `<script>`/`<link>` tags in `<head>` untouched and verify the relative depth of `{{ASSETS_PATH}}` / `{{INDEX_PATH}}` matches the page's location.
+
+## 5. Hard rules
 
 - **Accuracy first.** If you are unsure about a fact, number, formula or paper claim — leave it out. Never fabricate.
 - **Self-contained pages.** Every page must render fully offline, standalone.
