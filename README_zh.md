@@ -78,11 +78,14 @@ Follow install.md if anything fails.
 
 ```bash
 python scripts/install.py                 # 安装 / 升级（幂等）
+python scripts/install.py --check-update  # 检查 GitHub 是否有新版本
 python scripts/install.py --startup       # 安装 + 开机自启服务
 python scripts/install.py --uninstall     # 卸载（保留知识库）
 python scripts/serve.py start|stop|status # 管理本地服务
 python scripts/build_index.py             # 手动重建首页
 ```
+
+**升级**：skill 就是本地文件，Claude Code / Codex **不会**自动从 GitHub 拉新版本。更新方式：`git pull && python scripts/install.py`，然后开新会话。知识库、复习记录、屏蔽配置都不受影响。变更内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 Claude Code 和 Codex 共享同一个服务实例，不会冲突（`start` 幂等）。Codex 没有 SessionEnd hook，只有手动模式——见 [install.md](install.md)。
 

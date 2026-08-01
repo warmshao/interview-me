@@ -78,11 +78,14 @@ Pages support LaTeX math (`\( ... \)`, `$$ ... $$`), syntax-highlighted code, an
 
 ```bash
 python scripts/install.py                 # install / upgrade (idempotent)
+python scripts/install.py --check-update  # check GitHub for a newer version
 python scripts/install.py --startup       # install + auto-start server at logon
 python scripts/install.py --uninstall     # uninstall (knowledge base is kept)
 python scripts/serve.py start|stop|status # manage the local server
 python scripts/build_index.py             # rebuild the home page manually
 ```
+
+**Upgrading**: skills are plain local files — Claude Code / Codex never auto-pull from GitHub. To update: `git pull && python scripts/install.py`, then start a new session. Your knowledge base, review records, and filters are never touched. See [CHANGELOG.md](CHANGELOG.md) for what changed.
 
 Claude Code and Codex share the same server instance — no conflict, `start` is idempotent. Codex has no SessionEnd hook, so extraction there is manual-only — see [install.md](install.md).
 

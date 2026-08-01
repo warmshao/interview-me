@@ -31,6 +31,35 @@ SKILL_DST = os.path.join(CLAUDE_DIR, "skills", "interview-me")
 SETTINGS = os.path.join(CLAUDE_DIR, "settings.json")
 DEFAULT_KB = os.path.join(os.path.expanduser("~"), ".interview-me")
 COPY_ITEMS = ["SKILL.md", "prompts", "scripts", "templates", "assets"]
+REMOTE_VERSION_URL = ("https://raw.githubusercontent.com/warmshao/interview-me/"
+                      "main/VERSION")
+
+
+def local_version() -> str:
+    try:
+        with open(os.path.join(REPO_DIR, "VERSION"), encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return "unknown"
+
+
+def check_update():
+    """Compare the local VERSION against the one on GitHub main."""
+    import urllib.request
+    local = local_version()
+    try:
+        with urllib.request.urlopen(REMOTE_VERSION_URL, timeout=10) as r:
+            remote = r.read().decode().strip()
+    except Exception as e:
+        print(f"[check] could not reach GitHub: {e}")
+        return
+    print(f"[check] local: {local} · remote: {remote}")
+    if remote != local:
+        print("[check] a newer version is available. Update with:")
+        print("        git pull && python scripts/install.py")
+        print("        (then start a new Claude Code session)")
+    else:
+        print("[check] you are up to date.")
 
 
 def copy_skill():
@@ -210,11 +239,19 @@ def main():
     ap.add_argument("--no-hook", action="store_true",
                     help="do not register the SessionEnd hook")
     ap.add_argument("--uninstall", action="store_true", help="uninstall")
+    ap.add_argument("--check-update", action="store_true",
+                    help="check GitHub for a newer version and exit")
     args = ap.parse_args()
+
+    if args.check_update:
+        check_update()
+        return
 
     if args.uninstall:
         uninstall()
         return
+
+    print(f"InterviewMe v{local_version()}")
 
     kb = os.path.abspath(args.kb)
     copy_skill()
