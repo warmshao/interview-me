@@ -102,9 +102,10 @@ mark{background:rgba(242,204,96,.35);color:inherit;border-radius:3px;padding:0 1
 .quiz-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:1.5rem}
 .quiz-overlay.open{display:flex}
 .quiz-card{background:var(--panel);border:1px solid var(--border);border-radius:18px;max-width:720px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.4)}
-.quiz-head{display:flex;justify-content:space-between;align-items:center;padding:1.1rem 1.4rem;border-bottom:1px solid var(--border)}
-.quiz-src{font-size:.8rem;color:var(--muted)}
+.quiz-head{display:flex;justify-content:space-between;align-items:center;padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);gap:.8rem}
+.quiz-src{font-size:.8rem;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .quiz-src a{color:var(--accent)}
+.quiz-scope{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:.3rem .5rem;font-size:.8rem;outline:none;cursor:pointer;flex:none}
 .quiz-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1}
 .quiz-close:hover{color:var(--text)}
 .quiz-body{padding:1.4rem;overflow-y:auto;flex:1}
@@ -226,6 +227,7 @@ mark{background:rgba(242,204,96,.35);color:inherit;border-radius:3px;padding:0 1
   <div class="quiz-card">
     <div class="quiz-head">
       <div class="quiz-src" id="quiz-src"></div>
+      <select class="quiz-scope" id="quiz-scope" title="Quiz scope"></select>
       <button class="quiz-close" id="quiz-close">✕</button>
     </div>
     <div class="quiz-body">
@@ -444,24 +446,50 @@ $("#q").addEventListener("input", e => {
 /* ── quiz mode ── */
 let quizBank = allPages().flatMap(p =>
   (p.qa || []).map(qa => ({page: p.path, title: p.title, group: p.group,
+                           type: p.type,
                            due: reviewState(p.path).status !== "ok", ...qa})));
 let currentQuiz = null;
 
+/* scope selector: all / due-only / per-category / per-project (persisted) */
+(function initScope(){
+  const sel = $("#quiz-scope");
+  sel.innerHTML = `<option value="__ALL__">All topics</option>`
+    + `<option value="__DUE__">Due only</option>`
+    + DATA.categories.map(c => `<option value="g:${esc(c.name)}">${esc(c.name)}</option>`).join("")
+    + DATA.projects.map(c => `<option value="p:${esc(c.name)}">📁 ${esc(c.name)}</option>`).join("");
+  try{ sel.value = localStorage.getItem("imquizscope") || "__ALL__"; }catch(e){}
+  sel.onchange = () => {
+    try{ localStorage.setItem("imquizscope", sel.value); }catch(e){}
+    showQuiz();
+  };
+})();
+
+function bankForScope(){
+  const scope = $("#quiz-scope").value;
+  if(scope === "__DUE__") return quizBank.filter(q => q.due);
+  if(scope.startsWith("g:")) return quizBank.filter(q => q.type === "general" && q.group === scope.slice(2));
+  if(scope.startsWith("p:")) return quizBank.filter(q => q.type === "project" && q.group === scope.slice(2));
+  return quizBank;
+}
+
 function pickQuiz(){
+  const bank = bankForScope();
+  if(!bank.length) return null;
   // pages due for review get 3x weight
-  const pool = quizBank.flatMap(item => item.due ? [item, item, item] : [item]);
+  const pool = bank.flatMap(item => item.due ? [item, item, item] : [item]);
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function showQuiz(){
-  if(!quizBank.length){
-    $("#quiz-q").textContent = "No interview Q&A found yet. Distill some knowledge first.";
+  currentQuiz = pickQuiz();
+  if(!currentQuiz){
+    $("#quiz-q").textContent = quizBank.length
+      ? "No questions in this scope yet — try another filter."
+      : "No interview Q&A found yet. Distill some knowledge first.";
     $("#quiz-a").className = "quiz-a";
     $("#quiz-a").innerHTML = "";
     $("#quiz-src").textContent = "";
-    currentQuiz = null;
   } else {
-    currentQuiz = pickQuiz();
     $("#quiz-q").innerHTML = currentQuiz.q;
     $("#quiz-a").innerHTML = currentQuiz.a;
     $("#quiz-a").className = "quiz-a";

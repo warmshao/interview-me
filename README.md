@@ -43,8 +43,9 @@ The home page shows both as separate sections in the sidebar.
 ## From storing to learning
 
 - **Spaced repetition** — every page carries a review record (stored in your browser, no backend). Intervals grow 1→3→7→14→30→60 days per successful recall; a lapse resets to day 1. New pages are due immediately. The sidebar's **Due for review** filter and the red dots on cards tell you what to revisit today.
-- **🎯 Quiz me** — the home page embeds a bank of every interview Q&A from all pages. Quiz mode serves random questions (due pages weighted 3×), reveals the answer on demand, and your "Knew it / Didn't know" self-grade doubles as that page's review record. Fully keyboard-driven: `space` reveal · `1` knew · `2` didn't · `→` next.
+- **🎯 Quiz me** — the home page embeds a bank of every interview Q&A from all pages. Quiz mode serves random questions (due pages weighted 3×), reveals the answer on demand, and your "Knew it / Didn't know" self-grade doubles as that page's review record. Scope the quiz to a category, a project, or due-only for targeted prep. Fully keyboard-driven: `space` reveal · `1` knew · `2` didn't · `→` next.
 - **Learning dashboard** — streak counter, answers today/total, due count, and a GitHub-style activity heatmap keep the feedback loop alive.
+- **Review anywhere** — mark a page reviewed from its card, from inside the page itself (floating ✓ button), or implicitly by grading it in quiz mode. Pages are print-friendly: printing expands all collapsed answers into a clean cheat-sheet.
 
 ## Rich content, offline
 
