@@ -29,7 +29,9 @@ Your training knowledge has a cutoff and may be stale or imprecise. For every to
 - Prefer authoritative sources: official docs, papers, canonical blogs. Cross-check numbers and claims.
 - NEVER fabricate citations, benchmark numbers, or API details. If unverifiable, write the concept without the number.
 
-## 4. Write the knowledge pages
+## 4. Write the knowledge pages — to GENERAL, always
+
+**Iron rule of this mode: knowledge pages go to GENERAL categories (`{{KB_DIR}}/<Category>/`), never into the JD's project folder.** The knowledge must be anonymized and reusable — the next JD you prepare for will reuse and deepen these same pages. Only the roadmap (next step) lives under `projects/jd-…`. This is what makes the knowledge base compound instead of fragmenting: each new JD adds a roadmap of links, not a parallel copy of knowledge.
 
 Follow `{{SKILL_DIR}}/prompts/extract.md` sections 3–5 (page structure, dedup, HTML authoring rules) exactly — same template, same quality bar. Differences for this mode:
 
@@ -41,8 +43,8 @@ Follow `{{SKILL_DIR}}/prompts/extract.md` sections 3–5 (page structure, dedup,
 Create or update `{{KB_DIR}}/projects/jd-{{ROLE_SLUG}}/prep-roadmap.html` (ROLE_SLUG = short role/company slug, e.g. `bytedance-llm-infra`):
 
 - Use the standard knowledge.html template ({{PAGE_PATH}} = `projects/jd-{{ROLE_SLUG}}/prep-roadmap.html`).
-- Content: the topic decomposition table (topic → priority → KB page link → review status), a suggested study order, and a "mock interview" Q&A block with the 5–10 highest-probability questions across all topics.
-- Its "Related" chips link to every KB page you created/updated in this run — and those pages link back.
+- Content: the topic decomposition table (topic → priority → **link to the GENERAL KB page** → review status), a suggested study order, and a "mock interview" Q&A block with the 5–10 highest-probability questions across all topics.
+- **Cross-linking is mandatory**: the roadmap's table and "Related" chips link to every general page touched in this run, and each of those general pages adds the roadmap to its own "Related" section (relative path `../projects/jd-…/prep-roadmap.html` — compute the depth correctly).
 
 ## 6. Finish
 
